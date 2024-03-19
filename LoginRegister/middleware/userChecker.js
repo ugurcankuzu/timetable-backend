@@ -1,13 +1,15 @@
+const UserModule = require('../models/userModule'); 
+
 const check_if_user_existe = async (email) => {
   try {
+    
     const user = await UserModule.findOne({ email });
-    if (user) {
-      return true; 
-    } else {
-      return false; 
-    }
+
+    
+    return !!user;
   } catch (error) {
-    return false; 
+    console.error("check_if_user_existe error:", error);
+    return false;
   }
 };
 

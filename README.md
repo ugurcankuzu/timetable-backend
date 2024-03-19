@@ -1,8 +1,10 @@
-npm run dev 
+npm install bağımlılıkları yükleme
 
-.env [ PORT=5000, HOST_NAME="monogdb atlas connection string], SEESİON_SECRET=mysecretkey]
+npm run dev serve komutu
 
-request http://localhost:5000/api/user/register
+.env [ PORT=5000, HOST_NAME="monogdb atlas connection string], SEESİON_SECRET=mysecretkey] dosyası 
 
-request http://localhost:5000/api/user/login
+request http://localhost:5000/api/user/register "register yolu"
+
+request http://localhost:5000/api/user/login "login yolu"
 

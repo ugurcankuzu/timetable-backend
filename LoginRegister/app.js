@@ -5,6 +5,7 @@ const connectDB = require("./db/connect");
 require("dotenv").config();
 const userRoute = require("./routers/userRouter");
 const defultRoute = require("./routers/defaultRoute");
+const cors= require("cors");
 const app = express();
 
 //json parse
@@ -19,6 +20,8 @@ app.use(
     saveUninitialized: true,
   })
 );
+
+app.use(cors());
 
 // app use route
 app.use("/api/user", userRoute);

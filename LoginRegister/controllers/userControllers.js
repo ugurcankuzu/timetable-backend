@@ -2,7 +2,7 @@ const UserModule = require("../models/userModule");
 const { hash_password, password_checker } = require("../middleware/password");
 const { check_if_user_existe } = require("../middleware/userChecker");
 const config = require("../config/crypto");
-const jwt = require('jsonwebtoken'); 
+const jwt = require("jsonwebtoken");
 
 const get_all_users = async (req, res) => {
   try {
@@ -19,24 +19,28 @@ const get_all_users = async (req, res) => {
 
 const add_user = async (req, res) => {
   try {
-    let { email, password ,name, surname } = req.body;
+    let { email, password, name, surname } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ success: false, mes: "Email and password are required" });
+      return res
+        .status(400)
+        .json({ success: false, mes: "Email and password are required" });
     }
 
     // Email'in varlığını kontrol et
     const userExists = await check_if_user_existe(email);
 
     if (userExists) {
-      return res.status(400).json({ success: false, msg: "User with this email already exists" });
+      return res
+        .status(400)
+        .json({ success: false, msg: "User with this email already exists" });
     }
 
     // Şifreyi hash'le
     password = hash_password(password);
-    
+
     // Yeni bir UserModule oluştur
-    const newUser = new UserModule({ email, password,name, surname });
+    const newUser = new UserModule({ email, password, name, surname });
 
     // Veritabanına kaydet
     await newUser.save();
@@ -47,83 +51,73 @@ const add_user = async (req, res) => {
   }
 };
 
-
 const get_one_user = async (req, res) => {
   try {
-    const { id: userID } = req.params;
-    const user = await UserModule.findById(userID);
+    const { id } = req.user;
+    const user = await UserModule.findById(id);
     if (!user) {
       return res.status(404).json({ success: false, msg: "non users fund" });
     }
     res.json({
       success: true,
-      user: { email: user.email, id: user._id, status: user.status },
+      user: {
+        email: user.email,
+        id: user._id,
+        status: user.status,
+        name: user.name,
+        surname: user.surname,
+      },
     });
   } catch (error) {
     return res.status(404).json({
       success: false,
-      msg: `non user fund with id : ${req.params.id}`,
+      msg: `non user fund with id : ${id}`,
     });
   }
 };
 
 const login_user = async (req, res) => {
-    try {
-        const { email, password } = req.body;
-        
-        // Kullanıcıyı veritabanında bul
-        const user = await UserModule.findOne({ email });
-        
-        // Kullanıcı yoksa 404 dön
-        if (!user) {
-            return res.status(404).json({ success: false, msg: "User not found" });
-        }
-        
-        // Şifreyi kontrol et
-        const passwordChecker = await password_checker(password, user.password);
-        if (!passwordChecker) {
-            return res.status(401).json({ success: false, msg: "Incorrect password" });
-        }
-  
-        // Kullanıcı doğrulandı, JWT oluşturulacak
-        const token = jwt.sign({ id: user._id, role: user.role }, config.TOKEN_KEY, { expiresIn: '1d' });
-  
-        // Oluşturulan token, kullanıcıya geri gönderiliyor
-        res.status(200).json({ success: true, token });
-  
-    } catch (error) {
-      console.log(error);
-        res.status(500).json({ success: false, msg: "Server error" });
-    }
-};
+  try {
+    const { email, password } = req.body;
 
-const verifyToken = (req, res, next) => {
-    const token = req.headers['x-access-token'];
-  
-    if (!token) {
-      return res.status(403).json({ message: "A token is required for authentication" });
+    // Kullanıcıyı veritabanında bul
+    const user = await UserModule.findOne({ email });
+
+    // Kullanıcı yoksa 404 dön
+    if (!user) {
+      return res.status(404).json({ success: false, msg: "User not found" });
     }
-  
-    try {
-      const decoded = jwt.verify(token, config.TOKEN_KEY);
-      req.user = decoded;
-      next();
-    } catch (err) {
-      return res.status(401).json({ message: "Invalid Token" });
+
+    // Şifreyi kontrol et
+    const passwordChecker = await password_checker(password, user.password);
+    if (!passwordChecker) {
+      return res
+        .status(401)
+        .json({ success: false, msg: "Incorrect password" });
     }
-  };
-  
-  module.exports = verifyToken;
-  
+
+    // Kullanıcı doğrulandı, JWT oluşturulacak
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      config.TOKEN_KEY,
+      { expiresIn: "1d", algorithm: "HS256" }
+    );
+
+    // Oluşturulan token, kullanıcıya geri gönderiliyor
+    res.status(200).json({ success: true, token });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ success: false, msg: "Server error" });
+  }
+};
 
 const update_user = async (req, res) => {
   try {
-    
     if (!req.session.user) {
       return res.status(403).json({ success: false, msg: "you have to login" });
     }
     let body = req.body;
-   
+
     if (body.password) {
       body.password = hash_password(body.password);
     }
@@ -149,13 +143,12 @@ const update_user = async (req, res) => {
 
 const delete_user = async (req, res) => {
   try {
-   
     if (!req.session.user) {
       return res.status(403).json({ success: false, msg: "you have to login" });
     }
     const deletetedUserID = req.session.user.userID;
     const { id: userID } = req.body;
-   
+
     if (deletetedUserID != userID) {
       return res
         .status(403)

@@ -8,6 +8,7 @@ const {
   login_user,
   logout,
 } = require("../controllers/userControllers");
+const verifyToken = require("../middleware/verifyToken");
 const route = express.Router();
 
 route
@@ -16,9 +17,9 @@ route
   .post(add_user)
   .patch(update_user)
   .delete(delete_user);
-  route.get("/logout", logout);
-  route.route("/login").post(login_user);
-  route.route("/register").post(add_user);
-route.route("/:id").get(get_one_user);
+route.get("/logout", logout);
+route.route("/login").post(login_user);
+route.route("/register").post(add_user);
+route.route("/getUserDetails").get(verifyToken, get_one_user);
 
 module.exports = route;

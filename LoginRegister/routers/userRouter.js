@@ -14,12 +14,18 @@ const route = express.Router();
 route
   .route("/")
   .get(get_all_users)
-  .post(add_user)
+  .post(add_user);
+
+route
+  .route("/:id")
+  .get(get_one_user)
   .patch(update_user)
   .delete(delete_user);
+
 route.get("/logout", logout);
-route.route("/login").post(login_user);
-route.route("/register").post(add_user);
-route.route("/getUserDetails").get(verifyToken, get_one_user);
+route.post("/login", login_user);
+route.post("/register", add_user); 
+
+route.get("/getUserDetails", verifyToken, get_one_user); 
 
 module.exports = route;

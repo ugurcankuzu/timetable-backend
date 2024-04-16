@@ -53,10 +53,10 @@ const add_user = async (req, res) => {
 
 const get_one_user = async (req, res) => {
   try {
-    const { id } = req.user;
+    const id = req.params.id; 
     const user = await UserModule.findById(id);
     if (!user) {
-      return res.status(404).json({ success: false, msg: "non users fund" });
+      return res.status(404).json({ success: false, msg: "User not found" });
     }
     res.json({
       success: true,
@@ -66,15 +66,18 @@ const get_one_user = async (req, res) => {
         status: user.status,
         name: user.name,
         surname: user.surname,
+        schedule: user.schedule || null
       },
     });
   } catch (error) {
-    return res.status(404).json({
+    console.error(error);
+    return res.status(500).json({
       success: false,
-      msg: `non user fund with id : ${id}`,
+      msg: `Error fetching user with id: ${id}`,
     });
   }
 };
+
 
 const login_user = async (req, res) => {
   try {

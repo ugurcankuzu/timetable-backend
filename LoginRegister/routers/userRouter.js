@@ -15,7 +15,7 @@ route.get("/logout", logout);
 route.post("/login", login_user);
 route.post("/register", add_user);
 route.get("/getUserDetails", verifyToken, get_one_user);
-
+/**
 route
   .route("/")
   .get(get_all_users)
@@ -25,5 +25,5 @@ route.route("/:id")
 .get(get_one_user)
 .patch(update_user)
 .delete(delete_user);
-
+ */
 module.exports = route;

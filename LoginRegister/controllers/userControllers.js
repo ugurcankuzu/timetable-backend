@@ -66,7 +66,9 @@ const get_one_user = async (req, res) => {
         status: user.status,
         name: user.name,
         surname: user.surname,
+        courses: user.courses,
         schedule: user.schedule || null,
+        freeTimes: user.freeTimes,
       },
     });
   } catch (error) {

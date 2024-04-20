@@ -4,8 +4,9 @@ var session = require("express-session");
 const connectDB = require("./db/connect");
 require("dotenv").config();
 const userRoute = require("./routers/userRouter");
+const courseRoute = require("./routers/coursesRouter");
 const defultRoute = require("./routers/defaultRoute");
-const cors= require("cors");
+const cors = require("cors");
 const app = express();
 
 //json parse
@@ -25,8 +26,8 @@ app.use(cors());
 
 // app use route
 app.use("/api/user", userRoute);
+app.use("/api/courses", courseRoute);
 app.use(defultRoute);
-
 
 const start = async () => {
   await connectDB(process.env.HOST_NAME);

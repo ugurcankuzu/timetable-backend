@@ -1,7 +1,6 @@
 const UserModule = require("../models/userModule");
 const { hash_password, password_checker } = require("../middleware/password");
 const { check_if_user_existe } = require("../middleware/userChecker");
-const config = require("../config/crypto");
 const jwt = require("jsonwebtoken");
 
 const get_all_users = async (req, res) => {

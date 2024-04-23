@@ -102,7 +102,7 @@ const login_user = async (req, res) => {
     // Kullanıcı doğrulandı, JWT oluşturulacak
     const token = jwt.sign(
       { id: user._id, role: user.role },
-      config.TOKEN_KEY,
+      process.env.SESSION_SECRET,
       { expiresIn: "1d", algorithm: "HS256" }
     );
 

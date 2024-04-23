@@ -6,7 +6,9 @@ require("dotenv").config();
 const userRoute = require("./routers/userRouter");
 const courseRoute = require("./routers/coursesRouter");
 const defultRoute = require("./routers/defaultRoute");
+const scheduleRoute = require("./routers/scheduleRouter");
 const cors = require("cors");
+const verifyToken = require("./middleware/verifyToken");
 const app = express();
 
 //json parse
@@ -24,9 +26,13 @@ app.use(
 
 app.use(cors());
 
+
 // app use route
 app.use("/api/user", userRoute);
+app.use(verifyToken);
 app.use("/api/courses", courseRoute);
+app.use("/api/schedule", scheduleRoute);
+
 app.use(defultRoute);
 
 const start = async () => {

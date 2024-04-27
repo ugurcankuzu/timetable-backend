@@ -3,6 +3,35 @@ const { hash_password, password_checker } = require("../middleware/password");
 const { check_if_user_existe } = require("../middleware/userChecker");
 const jwt = require("jsonwebtoken");
 
+const setFreeTimes = async (req, res) => {
+  try {
+    const { id } = req.user;
+    const { updatedFreeTimes } = req.body;
+    
+    const user = await UserModule.findByIdAndUpdate(id, {
+      freeTimes: updatedFreeTimes,
+    });
+    return res.status(200).json({ freeTimes: user.freeTimes });
+  } catch (e) {
+    return res.status(500).json({ success: false, msg: e.message });
+  }
+};
+const getFreeTimes = async (req, res) => {
+  try {
+    const { id } = req.user;
+    const user = await UserModule.findById(id);
+    if (user) {
+      return res.status(200).json({
+        success: true,
+        freeTimes: user.freeTimes,
+      });
+    }
+    return res.status(404).json({ success: false, msg: "user not found" });
+  } catch (e) {
+    res.status(500).json({ success: false, msg: e.message });
+  }
+};
+
 const get_all_users = async (req, res) => {
   try {
     const users = await UserModule.find({});
@@ -176,6 +205,8 @@ const logout = (req, res) => {
   }
 };
 module.exports = {
+  getFreeTimes,
+  setFreeTimes,
   get_all_users,
   add_user,
   get_one_user,

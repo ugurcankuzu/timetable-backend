@@ -7,7 +7,7 @@ const setFreeTimes = async (req, res) => {
   try {
     const { id } = req.user;
     const { updatedFreeTimes } = req.body;
-    
+
     const user = await UserModule.findByIdAndUpdate(id, {
       freeTimes: updatedFreeTimes,
     });
@@ -90,13 +90,14 @@ const get_one_user = async (req, res) => {
       success: true,
       user: {
         email: user.email,
-        id: user._id,
+        _id: user._id,
         status: user.status,
         name: user.name,
         surname: user.surname,
         courses: user.courses,
         schedule: user.schedule || null,
         freeTimes: user.freeTimes,
+        role: user.role,
       },
     });
   } catch (error) {

@@ -17,9 +17,9 @@ route.get("/logout", logout);
 route.post("/login", login_user);
 route.post("/register", add_user);
 route.get("/getUserDetails", verifyToken, get_one_user);
+route.get("/getAllUsers", verifyToken, get_all_users);
 route.get("/freeTimes", verifyToken, getFreeTimes);
 route.post("/setFreeTimes", verifyToken, setFreeTimes);
-
 
 /**
  * route.route("/").get(get_all_users).post(add_user);

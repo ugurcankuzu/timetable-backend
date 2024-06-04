@@ -5,8 +5,11 @@ const connectDB = require("./db/connect");
 require("dotenv").config();
 const userRoute = require("./routers/userRouter");
 const courseRoute = require("./routers/coursesRouter");
+const roomRoute = require("./routers/roomsRouter");
 const defultRoute = require("./routers/defaultRoute");
 const scheduleRoute = require("./routers/scheduleRouter");
+const departmentRoute = require("./routers/departmentsRouter");
+const sectionRoute = require("./routers/sectionsRouter");
 const cors = require("cors");
 const verifyToken = require("./middleware/verifyToken");
 const app = express();
@@ -26,13 +29,14 @@ app.use(
 
 app.use(cors());
 
-
 // app use route
 app.use("/api/user", userRoute);
 app.use(verifyToken);
 app.use("/api/courses", courseRoute);
 app.use("/api/schedule", scheduleRoute);
-
+app.use("/api/rooms", roomRoute);
+app.use("/api/departments", departmentRoute);
+app.use("/api/sections/", sectionRoute);
 app.use(defultRoute);
 
 const start = async () => {

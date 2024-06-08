@@ -43,8 +43,25 @@ const createSection = async (req, res) => {
     return res.status(500).json({ success: false, message: e.message });
   }
 };
-
+const deleteSection = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const { sectionId } = req.body;
+    const section = await Section.findByIdAndDelete(sectionId);
+    if (!section) {
+      throw new Error("Couldn't find Section");
+    }
+    const updatedSections = await Section.find({});
+    return res.status(200).json({ success: true, sections: updatedSections });
+  } catch (e) {
+    await session.abortTransaction();
+    session.endSession();
+    return res.status(500).json({ success: false, message: e.message });
+  }
+};
 module.exports = {
   createSection,
   getAllSections,
+  deleteSection,
 };

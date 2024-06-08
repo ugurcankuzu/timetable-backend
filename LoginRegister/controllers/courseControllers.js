@@ -1,5 +1,6 @@
 const User = require("../models/userModule");
 const Courses = require("../models/courseModule");
+const Departments = require("../models/departmentModule");
 const mongoose = require("mongoose");
 const getCoursesDetails = async (req, res) => {
   try {
@@ -45,12 +46,21 @@ const getAllCourses = async (req, res) => {
 };
 
 const createCourse = async (req, res) => {
-  try {
-    console.log(req.body);
-    const { courseName, lecturer, room, studentCount, semester, capacity } =
-      req.body;
+  const session = await mongoose.startSession();
+  session.startTransaction();
 
-    if (courseName && lecturer) {
+  try {
+    const {
+      courseName,
+      lecturer,
+      room,
+      studentCount,
+      semester,
+      capacity,
+      correspondingDepartment,
+    } = req.body;
+
+    if (courseName && lecturer && correspondingDepartment) {
       const newCourse = new Courses({
         courseName: courseName,
         lecturer: new mongoose.Types.ObjectId(lecturer),
@@ -60,46 +70,47 @@ const createCourse = async (req, res) => {
         semester: semester,
       });
 
-      const savedCourse = await newCourse.save();
-      if (savedCourse) {
-        const updatedUser = await User.findByIdAndUpdate(
-          lecturer,
-          {
-            $push: { courses: newCourse._id },
-          },
-          { new: true }
-        );
-
-        if (updatedUser) {
-          const updatedCourses = await Courses.find().populate({
-            path: "lecturer room",
-            select:
-              "_id name surname email freeTimes courses role roomName roomCapacity assignedCourse roomType",
-          });
-          return res
-            .status(200)
-            .json({ success: true, courses: updatedCourses });
-        } else {
-          // Eğer kullanıcı güncellenemezse, yeni oluşturulan kursu da sil
-          await Courses.findByIdAndDelete(newCourse._id);
-          return res.status(500).json({
-            success: false,
-            message: "Course created but can't updated user",
-          });
-        }
-      } else {
-        return res.status(500).json({
-          success: false,
-          message: "Course couldn't saved",
-        });
+      const savedCourse = await newCourse.save({ session });
+      if (!savedCourse) {
+        throw new Error("Course couldn't be saved");
       }
-    } else {
-      return res.status(400).json({
-        success: false,
-        message: "Please fill fields correctly",
+
+      const updatedUser = await User.findByIdAndUpdate(
+        lecturer,
+        { $push: { courses: newCourse._id } },
+        { new: true, session }
+      );
+
+      if (!updatedUser) {
+        throw new Error("Course created but can't update user");
+      }
+
+      const updatedDepartment = await Departments.findByIdAndUpdate(
+        correspondingDepartment,
+        { $push: { correspondingCourses: newCourse._id } },
+        { session }
+      );
+
+      if (!updatedDepartment) {
+        throw new Error("Course created but can't update department");
+      }
+
+      await session.commitTransaction();
+      session.endSession();
+
+      const updatedCourses = await Courses.find().populate({
+        path: "lecturer room",
+        select:
+          "_id name surname email freeTimes courses role roomName roomCapacity assignedCourse roomType",
       });
+
+      return res.status(200).json({ success: true, courses: updatedCourses });
+    } else {
+      throw new Error("Please fill fields correctly");
     }
   } catch (e) {
+    await session.abortTransaction();
+    session.endSession();
     return res.status(500).json({ success: false, message: e.message });
   }
 };
@@ -109,32 +120,47 @@ const deleteCourse = async (req, res) => {
   session.startTransaction();
   try {
     const { courseId, lecturerId } = req.body;
-    console.log(req.body);
     const deleteCourse = await Courses.findByIdAndDelete(courseId);
+
     if (deleteCourse) {
       const user = await User.findById(lecturerId);
       user.courses.pull(courseId);
       const deleteFromUser = await user.save();
 
       if (deleteFromUser) {
-        await session.commitTransaction();
-        session.endSession();
+        const departments = await Departments.find({
+          correspondingCourses: new mongoose.Types.ObjectId(courseId),
+        });
+        const deleteFromDepartment = departments.map(async (department) => {
+          department.correspondingCourses.pull(courseId);
+          await department.save();
+        });
+        if (await Promise.all(deleteFromDepartment)) {
+          await session.commitTransaction();
+          session.endSession();
+        } else {
+          throw new Error(
+            "Course deleted and removed from user. But couldn't remove from department"
+          );
+        }
       } else {
         throw new Error("Course Deleted but Couldn't Update User");
       }
     } else {
       throw new Error("Course couldn't deleted and user not updated");
     }
+
     const updatedCourses = await Courses.find().populate({
       path: "lecturer room",
       select:
         "_id name surname email freeTimes courses role roomName roomCapacity assignedCourse roomType",
     });
-    return res.status(200).send({ success: true, courses: updatedCourses });
+
+    return res.status(200).json({ success: true, courses: updatedCourses });
   } catch (e) {
     await session.abortTransaction();
     session.endSession();
-    return res.status(500).send({ success: false, message: e.message });
+    return res.status(500).json({ success: false, message: e.message });
   }
 };
 module.exports = {
